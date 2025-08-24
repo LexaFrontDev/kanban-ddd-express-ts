@@ -1,0 +1,1 @@
+This project is a Kanban board application built with Express.js, using DDD (Domain-Driven Design) and Clean Architecture principles. It is currently under development and created purely for practice to demonstrate backend architecture skills.
