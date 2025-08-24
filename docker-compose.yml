@@ -1,0 +1,62 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres:12
+    container_name: express-ts-ddd-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: devel
+      POSTGRES_DB: express-ts-ddd
+    ports:
+      - "2345:5432"
+    volumes:
+      - ./etc/postgresql/seed:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - express-ts-ddd-network
+
+  app:
+    build:
+      context: ./
+      dockerfile: etc/node/Dockerfile
+    image: express-ts-ddd
+    container_name: express-ts-ddd
+    restart: unless-stopped
+    working_dir: /app/
+    volumes:
+      - ./:/app
+    ports:
+      - "3000:3000"
+      - "9090:5555"
+    environment:
+      APP_NAME: "express-ts-ddd"
+      APP_DATABASE_URL: "postgresql://devel:@postgres:5432/express-ts-ddd?schema=public"
+      APP_ENV: "development"
+      APP_LOG_LEVEL: "debug"
+    depends_on:
+      - postgres
+    networks:
+      - express-ts-ddd-network
+
+  nginx:
+    build:
+      context: ./
+      dockerfile: ./etc/nginx/Dockerfile
+    container_name: express-ts-ddd-nginx
+    environment:
+      PORT: 8080
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - express-ts-ddd-network
+    depends_on:
+      - app
+
+volumes:
+  postgres-data:
+
+networks:
+  express-ts-ddd-network:
+    driver: bridge
